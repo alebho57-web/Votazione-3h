@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Sistema Votazione Sicuro</title>
+<style>
+body { margin:0; font-family:'Segoe UI', sans-serif; background:#0f172a; color:#e2e8f0; text-align:center; }
+.container { padding:50px 20px; max-width:1000px; margin:auto; }
+h1 { margin-bottom:30px; color:#38bdf8; font-size:2.5em; text-shadow:0 0 15px #38bdf8; }
+.section { display:none; animation:fadeSlide 0.7s ease; }
+@keyframes fadeSlide { from{opacity:0; transform:translateY(40px);} to{opacity:1; transform:translateY(0);} }
+.card { background:#1e293b; padding:30px; border-radius:20px; margin:auto; margin-bottom:30px; max-width:800px; text-align:left; }
+button { padding:15px 30px; margin:10px; border:none; border-radius:30px; cursor:pointer; font-size:18px; font-weight:bold; transition:0.3s; }
+.main-btn { background:#38bdf8; color:#0f172a; }
+.main-btn:hover { background:#0ea5e9; transform:scale(1.1); }
+.back-btn { background:#334155; color:white; }
+.back-btn:hover { background:#475569; transform:scale(1.05); }
+label { display:block; margin:12px 0; cursor:pointer; padding:12px; border-radius:12px; transition:0.3s; }
+label:hover { background:rgba(56,189,248,0.15); }
+.point-item { display:flex; justify-content:space-between; align-items:center; background:#1e293b; padding:15px 20px; margin:12px auto; max-width:700px; border-radius:15px; box-shadow:0 0 15px rgba(56,189,248,0.15); transition:0.3s; }
+.points-number { font-weight:bold; font-size:18px; min-width:30px; text-align:center; transition:0.2s; }
+.bump { animation:bump 0.3s ease; }
+@keyframes bump { 0%{transform:scale(1);} 50%{transform:scale(1.4); color:#38bdf8;} 100%{transform:scale(1);} }
+.home-btns { display:flex; flex-wrap:wrap; justify-content:center; gap:30px; margin-top:60px; }
+.home-btns button { min-width:220px; min-height:80px; font-size:20px; }
+.admin-container { display:flex; justify-content:space-between; gap:20px; flex-wrap:wrap; }
+.admin-left { flex:1; min-width:400px; }
+.admin-right { flex:1; min-width:300px; background:#1e293b; padding:20px; border-radius:20px; box-shadow:0 0 25px rgba(56,189,248,0.2); height:max-content; }
+.vote-list { margin-top:20px; }
+.timer-controls { display:flex; justify-content:space-between; flex-wrap:wrap; margin:15px 0; align-items:center; }
+.timer-controls input { width:60px; padding:5px; border-radius:5px; border:none; text-align:center; margin:3px; }
+.home-points { margin-top:20px; max-width:600px; margin-left:auto; margin-right:auto; }
+.voted-person { margin-top:20px; padding:20px; background:#334155; border-radius:15px; font-size:20px; color:#38bdf8; text-align:center; box-shadow:0 0 20px #38bdf8;}
+</style>
+</head>
+<body>
+
+<div class="container">
+
+    <!-- HOME -->
+    <div id="home">
+        <h1>🏠 Sistema Gioco</h1>
+        <div class="home-btns">
+            <button class="main-btn" onclick="showSection('vote')">VOTAZIONE</button>
+            <button class="main-btn" onclick="showSection('rules')">REGOLE</button>
+            <button class="main-btn" onclick="adminLogin()">ADMIN</button>
+        </div>
+        <div class="home-points card">
+            <h2>Classifica Punti (Visualizzazione)</h2>
+            <div id="homePointsList"></div>
+        </div>
+        <div id="votedPersonDisplay"></div>
+    </div>
+
+    <!-- VOTAZIONE -->
+    <div id="vote" class="section">
+        <h1>🗳️ Votazione</h1>
+        <div class="card">
+            <form id="voteForm">
+                <label><input type="radio" name="option" value="0"> Alessandro De Stefano</label>
+                <label><input type="radio" name="option" value="1"> Alessandro Santosuosso</label>
+                <label><input type="radio" name="option" value="2"> Riccardo Cantalupo</label>
+                <label><input type="radio" name="option" value="3"> Vincenzo Abeti</label>
+                <label><input type="radio" name="option" value="4"> Mattia De Rosa</label>
+                <label><input type="radio" name="option" value="5"> Adriano d'Alessandro</label>
+                <label><input type="radio" name="option" value="6"> Liberato Scarpa Pio</label>
+                <label><input type="radio" name="option" value="7"> Andrea Pinto</label>
+                <label><input type="radio" name="option" value="8"> Feliciano Del Baglivo</label>
+                <label><input type="radio" name="option" value="9"> Giovanni d'Amato</label>
+                <label><input type="radio" name="option" value="10"> Antonio Polichetti</label>
+                <button type="submit" class="main-btn">VOTA</button>
+            </form>
+        </div>
+        <div id="voteTimer" class="card"></div>
+        <button class="back-btn" onclick="showSection('home')">TORNA</button>
+    </div>
+
+    <!-- REGOLE -->
+    <div id="rules" class="section">
+        <h1>📜 Regole</h1>
+        <div class="card" id="rulesCard"></div>
+        <button class="back-btn" onclick="showSection('home')">TORNA</button>
+    </div>
+
+    <!-- ADMIN -->
+    <div id="points" class="section">
+        <h1>⭐ Admin Dashboard</h1>
+        <div class="admin-container">
+            <div class="admin-left">
+                <h2>Classifica Punti</h2>
+                <div id="pointsList"></div>
+
+                <h2>Voti Ricevuti</h2>
+                <div id="voteList" class="vote-list"></div>
+
+                <h2>Timer Votazione</h2>
+                <div class="timer-controls">
+                    <input type="number" id="daysInput" min="0" value="0" placeholder="Giorni">
+                    <input type="number" id="hoursInput" min="0" value="0" placeholder="Ore">
+                    <input type="number" id="minutesInput" min="0" value="0" placeholder="Minuti">
+                    <input type="number" id="secondsInput" min="0" value="0" placeholder="Secondi">
+                    <button onclick="startTimer()">Start</button>
+                    <button onclick="stopTimer()">Stop</button>
+                </div>
+                <div>Tempo rimanente: <span id="timeRemaining">--:--:--:--</span></div>
+                <button onclick="resetVotes()" style="background:#ef4444;color:white;">Reset Voti</button>
+            </div>
+            <div class="admin-right">
+                <h2>📋 Regole Punti</h2>
+                <div id="pointsRules"></div>
+            </div>
+        </div>
+        <button class="back-btn" onclick="showSection('home')">TORNA</button>
+    </div>
+
+</div>
+
+<script>
+// Regole generali
+let rulesText = `
+1. Ogni giocatore può votare una sola volta.
+2. I voti incrementano i punti dei personaggi.
+3. La classifica punti è visibile solo agli admin.
+4. Mantieni un comportamento corretto durante il gioco.
+`;
+let pointsRulesText = `
+- Puoi modificare i punti usando i pulsanti + e -.
+- Ogni giocatore parte da 30 punti.
+- Mantieni correttezza nel gioco.
+`;
+document.getElementById("rulesCard").innerHTML = rulesText;
+document.getElementById("pointsRules").innerHTML = pointsRulesText;
+
+// Lista giocatori
+let players = [
+    {name:"Alessandro De Stefano", points:30, votes:0},
+    {name:"Alessandro Santosuosso", points:30, votes:0},
+    {name:"Riccardo Cantalupo", points:30, votes:0},
+    {name:"Vincenzo Abeti", points:30, votes:0},
+    {name:"Mattia De Rosa", points:30, votes:0},
+    {name:"Adriano d'Alessandro", points:30, votes:0},
+    {name:"Liberato Scarpa Pio", points:30, votes:0},
+    {name:"Andrea Pinto", points:30, votes:0},
+    {name:"Feliciano Del Baglivo", points:30, votes:0},
+    {name:"Giovanni d'Amato", points:30, votes:0},
+    {name:"Antonio Polichetti", points:30, votes:0}
+];
+
+// Timer
+let voteOpen=false;
+let timerInterval;
+let endTime=null;
+let votedPerson=null;
+let votedPersonExpire=null;
+
+function showSection(sectionId){
+    ["home","vote","rules","points"].forEach(id=>document.getElementById(id).style.display="none");
+    document.getElementById(sectionId).style.display="block";
+    if(sectionId=="home") loadHomePoints();
+}
+
+function loadPoints(){
+    let container=document.getElementById("pointsList");
+    container.innerHTML="";
+    players.forEach((p,i)=>{
+        let div=document.createElement("div");
+        div.className="point-item";
+        div.innerHTML=`<span>${p.name}</span>
+        <div class="point-controls">
+            <button onclick="changePoints(${i},-1)">-</button>
+            <span id="p${i}" class="points-number">${p.points}</span>
+            <button onclick="changePoints(${i},1)">+</button>
+        </div>`;
+        container.appendChild(div);
+    });
+
+    // Voti ricevuti
+    let voteContainer=document.getElementById("voteList");
+    voteContainer.innerHTML="";
+    players.forEach(p=>{
+        voteContainer.innerHTML+=`<div>${p.name}: ${p.votes} voti</div>`;
+    });
+}
+
+function loadHomePoints(){
+    let container=document.getElementById("homePointsList");
+    container.innerHTML="";
+    players.forEach(p=>{
+        container.innerHTML+=`<div class="point-item"><span>${p.name}</span><span class="points-number">${p.points}</span></div>`;
+    });
+
+    // Mostra persona votata se c'è
+    let display=document.getElementById("votedPersonDisplay");
+    if(votedPerson && new Date().getTime() < votedPersonExpire){
+        display.innerHTML=`<div class="voted-person">🏆 Persona votata: ${votedPerson.name}</div>`;
+    } else {
+        display.innerHTML="";
+        votedPerson=null;
+    }
+}
+
+function changePoints(index, delta){
+    players[index].points+=delta;
+    if(players[index].points<0) players[index].points=0;
+    document.getElementById("p"+index).textContent=players[index].points;
+    document.getElementById("p"+index).classList.add("bump");
+    setTimeout(()=>document.getElementById("p"+index).classList.remove("bump"),300);
+}
+
+document.getElementById("voteForm").addEventListener("submit",function(e){
+    e.preventDefault();
+    if(!voteOpen){ alert("Votazione chiusa!"); return; }
+    if(localStorage.getItem("hasVoted")){ alert("Hai già votato!"); return; }
+    let selected=document.querySelector('input[name="option"]:checked');
+    if(!selected){ alert("Seleziona un'opzione!"); return; }
+    let index=selected.value;
+    players[index].votes++;
+    players[index].points++;
+    localStorage.setItem("points_"+index,players[index].points);
+    localStorage.setItem("hasVoted","true");
+    alert("Voto registrato!");
+    loadPoints();
+    loadHomePoints();
+});
+
+// Timer
+function startTimer(){
+    let d=parseInt(document.getElementById("daysInput").value)||0;
+    let h=parseInt(document.getElementById("hoursInput").value)||0;
+    let m=parseInt(document.getElementById("minutesInput").value)||0;
+    let s=parseInt(document.getElementById("secondsInput").value)||0;
+    let totalMs=((d*24+h)*3600 + m*60 + s)*1000;
+    if(totalMs<=0){ alert("Imposta un tempo valido!"); return; }
+    endTime=new Date().getTime()+totalMs;
+    voteOpen=true;
+    updateTimer();
+    if(timerInterval) clearInterval(timerInterval);
+    timerInterval=setInterval(updateTimer,1000);
+}
+
+function stopTimer(){
+    voteOpen=false;
+    clearInterval(timerInterval);
+    document.getElementById("timeRemaining").textContent="--:--:--:--";
+}
+
+function resetVotes(){
+    players.forEach(p=>p.votes=0);
+    localStorage.removeItem("hasVoted");
+    votedPerson=null;
+    votedPersonExpire=null;
+    alert("Voti resettati!");
+    loadPoints();
+    loadHomePoints();
+}
+
+function updateTimer(){
+    let now=new Date().getTime();
+    let remaining=endTime-now;
+    if(remaining<=0 && voteOpen){
+        voteOpen=false;
+        clearInterval(timerInterval);
+        document.getElementById("timeRemaining").textContent="00:00:00:00";
+        // Determina chi ha più voti
+        let maxVotes=Math.max(...players.map(p=>p.votes));
+        let topPlayers=players.filter(p=>p.votes===maxVotes && maxVotes>0);
+        if(topPlayers.length>0){
+            votedPerson=topPlayers[0]; // prende il primo in caso di pareggio
+            votedPersonExpire=new Date().getTime() + 3*60*60*1000; // 3 ore
+            alert(`Votazione terminata! Persona votata: ${votedPerson.name}`);
+        } else {
+            alert("Votazione terminata! Nessuno ha ricevuto voti.");
+        }
+    } else if(remaining>0){
+        let days=Math.floor(remaining/86400000);
+        let hours=Math.floor((remaining%86400000)/3600000);
+        let minutes=Math.floor((remaining%3600000)/60000);
+        let seconds=Math.floor((remaining%60000)/1000);
+        document.getElementById("timeRemaining").textContent=`${days.toString().padStart(2,'0')}:${hours.toString().padStart(2,'0')}:${minutes.toString().padStart(2,'0')}:${seconds.toString().padStart(2,'0')}`;
+    }
+    loadPoints();
+    loadHomePoints();
+}
+
+function adminLogin(){
+    let pwd=prompt("Inserisci password admin:");
+    if(pwd==="Capo1234"){
+        showSection("points");
+        loadPoints();
+        if(voteOpen && !timerInterval) timerInterval=setInterval(updateTimer,1000);
+    } else alert("Password errata!");
+}
+
+// Aggiorna home punti ogni 5 secondi
+setInterval(loadHomePoints,5000);
+</script>
+
+</body>
+</html>
